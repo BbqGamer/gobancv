@@ -12,16 +12,14 @@ class Stone(NamedTuple):
 
 
 def draw_board(stones: list[Stone], board_size: int = 19):
-    fig = plt.figure(figsize=[8, 8])
+    fig = plt.figure(figsize=(8, 8))
     fig.set_facecolor('#BA8C63')
     ax = fig.add_subplot(111)
 
-    for x in range(board_size):
-        ax.plot([x, x], [0, board_size-1], 'k')
-    for y in range(board_size):
-        ax.plot([0, board_size-1], [y, y], 'k')
-
-    ax.set_position([0, 0, 1, 1])
+    for i in range(board_size):
+        ax.plot((i, i), (0, board_size-1), 'k')
+        ax.plot((0, board_size-1), (i, i), 'k')
+    ax.set_position((0, 0, 1, 1))
 
     ax.set_axis_off()
 
@@ -35,6 +33,7 @@ def draw_board(stones: list[Stone], board_size: int = 19):
 
         ax.plot(x, y, 'o', markersize=30, markeredgecolor=(
             0, 0, 0), markerfacecolor=color, markeredgewidth=2)
+    plt.show()
 
 
 if __name__ == "__main__":
