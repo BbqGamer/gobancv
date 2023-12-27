@@ -59,6 +59,9 @@ while True:
         print("Can't receive frame (stream end?). Exiting ...")
         break
 
+    # Transformations happen here:
+    frame = cv.flip(frame, 0)
+
     if out:
         out.write(frame)
 
