@@ -11,7 +11,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--filename', type=str, required=False,
+    '--input-file', type=str, required=False,
     help="Input file with go game (not to be used with --camera)"
 )
 
@@ -20,21 +20,34 @@ parser.add_argument(
     help="Control delay between frames (most useful when working with files)"
 )
 
+parser.add_argument(
+    '--output-file', type=str, required=False,
+    help="Choose where to save the processed video"
+)
+
 
 args = parser.parse_args()
 
-if args.filename and args.camera:
+if args.input_file and args.camera:
     parser.error('Input cannot be both footage from camera and file')
 
 source = args.camera
 delay = 1
-if args.filename:
-    source = args.filename
+if args.input_file:
+    source = args.input_file
     delay = 25  # miliseconds
 if args.delay:
     delay = args.delay
 
 cap = cv.VideoCapture(source)
+fps = int(cap.get(cv.CAP_PROP_FPS))
+width = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
+
+out = None
+if args.output_file:
+    fourcc = cv.VideoWriter.fourcc(*'DIVX')
+    out = cv.VideoWriter(args.output_file, fourcc, fps, (width, height))
 
 if not cap.isOpened():
     print("Cannot open camera")
@@ -46,9 +59,14 @@ while True:
         print("Can't receive frame (stream end?). Exiting ...")
         break
 
+    if out:
+        out.write(frame)
+
     cv.imshow('frame', frame)
     if cv.waitKey(delay) == ord('q'):
         break
 
 cap.release()
+if out:
+    out.release()
 cv.destroyAllWindows()
