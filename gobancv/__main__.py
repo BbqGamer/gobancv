@@ -1,5 +1,7 @@
 import cv2 as cv
 import argparse
+from warp import get_warped
+import numpy as np
 
 
 parser = argparse.ArgumentParser(
@@ -59,13 +61,17 @@ while True:
         print("Can't receive frame (stream end?). Exiting ...")
         break
 
-    # Transformations happen here:
-    frame = cv.flip(frame, 0)
+    warped = get_warped(frame)
+    if warped is None:
+        h = min(frame.shape[:2])
+        warped = np.zeros((h, h, 3), dtype=np.uint8)
+
+    new_frame = np.concatenate((frame, warped), axis=1)
 
     if out:
-        out.write(frame)
+        out.write(new_frame)
+    cv.imshow('frame', new_frame)
 
-    cv.imshow('frame', frame)
     if cv.waitKey(delay) == ord('q'):
         break
 
