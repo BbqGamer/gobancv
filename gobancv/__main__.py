@@ -1,6 +1,7 @@
 import cv2 as cv
 import argparse
 from warp import get_warped
+from grid import get_intersections, draw_intersections, get_lines, filter_lines, draw_lines
 import numpy as np
 
 
@@ -27,6 +28,10 @@ parser.add_argument(
     help="Choose where to save the processed video"
 )
 
+parser.add_argument(
+    '--debug', action='store_true', required=False,
+    help="Show intermediate steps"
+)
 
 args = parser.parse_args()
 
@@ -62,11 +67,25 @@ while True:
         break
 
     warped = get_warped(frame)
+    if warped is not None:
+        lines = get_lines(warped)
+        h, v = filter_lines(lines, warped.shape[1])
+
+        draw_lines(warped, h)
+        draw_lines(warped, v)
+        intersections = get_intersections(h, v)
+        if intersections is not None:
+            lines = get_lines(warped)
+            draw_intersections(warped, intersections)
+
     if warped is None:
         h = min(frame.shape[:2])
         warped = np.zeros((h, h, 3), dtype=np.uint8)
-
-    new_frame = np.concatenate((frame, warped), axis=1)
+    
+    if args.debug:
+        new_frame = np.concatenate((frame, warped), axis=1)
+    else:
+        new_frame = frame
 
     if out:
         out.write(new_frame)
