@@ -44,3 +44,17 @@ def draw_circles(img, circles):
         cv.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 2)
         cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
 
+
+def closest_intersection(circle, intersections, board_size):
+    closest = None
+    min_dist = 40
+    for i in range(len(intersections)):
+        x, y = intersections[i]
+        a = i // board_size + 1
+        b = i % board_size + 1
+        dist = np.linalg.norm(circle[:2] - [x, y])
+        if dist < min_dist:
+            min_dist = dist
+            closest = (a, b)
+    return closest
+

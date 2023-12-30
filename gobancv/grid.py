@@ -78,7 +78,7 @@ def get_intersections(h, v):
             ])
             b = np.array([[h_rho], [v_rho]])
             x0, y0 = np.linalg.solve(A, b)
-            intersections.append((x0, y0))
+            intersections.append((x0[0], y0[0]))
     return intersections
 
 

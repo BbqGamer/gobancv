@@ -11,7 +11,7 @@ from grid import (
     get_mean_dist,
     draw_intersections
 )
-from stones import get_histograms, find_circles, draw_circles
+from stones import find_circles, draw_circles, closest_intersection
 from utils import Stone
 from sklearn.cluster import KMeans
 
@@ -37,7 +37,7 @@ def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
     
     minRadius = int(radius * 3 / 4)
     maxRadius = int(radius * 4 / 3)
-    circles = find_circles(warped, minRadius, maxRadius, True)
+    circles = find_circles(warped, minRadius, maxRadius, debug)
 
     if debug:
         debug_img = warped.copy()
@@ -47,22 +47,12 @@ def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
         draw_circles(debug_img, circles)
         cv.imshow('DEBUG main', debug_img)
 
-
-    colors = get_histograms(warped, intersections, radius)
-    kmeans = KMeans(n_clusters=3, random_state=0)
-    kmeans.fit(colors)
-    labels = kmeans.labels_
-    light = np.argmax(kmeans.cluster_centers_, axis=0)
-    dark = np.argmin(kmeans.cluster_centers_, axis=0)
-
+    # find closest intersection
     stones = []
-    for i in range(len(intersections)):
-        b = i // board_size + 1
-        a = i % board_size + 1
-        if labels[i] == dark[0]:
-            stones.append(Stone(a, b, 'k'))
-        elif labels[i] == light[0]:
-            stones.append(Stone(a, b, 'w'))
+    intersections = sorted(intersections) 
+    for circle in circles[0]:
+        cy, cx = closest_intersection(circle, intersections, board_size)
+        stones.append(Stone(cy, cx, 'k'))
 
     return stones
 
