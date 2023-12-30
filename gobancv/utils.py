@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from typing import NamedTuple
+import numpy as np
 
 BLACK = 'k'
 WHITE = 'w'
@@ -11,7 +12,7 @@ class Stone(NamedTuple):
     color: str
 
 
-def draw_board(stones: list[Stone], board_size: int = 19):
+def draw_board(stones: list[Stone], board_size: int = 19, show=True):
     fig = plt.figure(figsize=(8, 8))
     fig.set_facecolor('#BA8C63')
     ax = fig.add_subplot(111)
@@ -28,15 +29,23 @@ def draw_board(stones: list[Stone], board_size: int = 19):
 
     for (x, y, color) in stones:
         assert color in [BLACK, WHITE]
-        assert 0 <= x < board_size
-        assert 0 <= y < board_size
+        assert 1 <= x <= board_size
+        assert 1 <= y <= board_size
 
         ax.plot(x-1, y-1, 'o', markersize=30, markeredgecolor=(
             0, 0, 0), markerfacecolor=color, markeredgewidth=2)
 
     ax.invert_yaxis()
+    if show:
+        plt.show()
+    else:
+        return fig
 
-    plt.show()
+def board_to_numpy(stones: list[Stone], board_size: int = 19):
+    fig = draw_board(stones, board_size, show=False)
+    fig.canvas.draw()
+    data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    return data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
 
 
 def read_stones(content: str) -> list[Stone]:
