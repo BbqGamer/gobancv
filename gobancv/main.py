@@ -11,7 +11,7 @@ from grid import (
     get_mean_dist,
     draw_intersections
 )
-from stones import get_histograms
+from stones import get_histograms, find_circles, draw_circles
 from utils import Stone
 from sklearn.cluster import KMeans
 
@@ -30,18 +30,23 @@ def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
 
     intersections = get_intersections(h, v)
 
-    if debug:
-        draw_lines(warped, h)
-        draw_lines(warped, v)
-        draw_intersections(warped, intersections)
-        cv.imshow('warped', warped)
-
-
-    lines = get_lines(warped)
     # get params for neighborhood
     h_mean = get_mean_dist(h)
     v_mean = get_mean_dist(v)
     radius = min(h_mean, v_mean) // 2
+    
+    minRadius = int(radius * 3 / 4)
+    maxRadius = int(radius * 5 / 4)
+    circles = find_circles(warped, minRadius, maxRadius)
+
+    if debug:
+        debug_img = warped.copy()
+        draw_lines(debug_img, h)
+        draw_lines(debug_img, v)
+        draw_intersections(debug_img, intersections)
+        draw_circles(debug_img, circles)
+        cv.imshow('DEBUG', debug_img)
+
 
     colors = get_histograms(warped, intersections, radius)
     kmeans = KMeans(n_clusters=3, random_state=0)
