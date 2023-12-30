@@ -15,7 +15,7 @@ from stones import find_circles, draw_circles, closest_intersection
 from utils import Stone
 from sklearn.cluster import KMeans
 
-def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
+def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
     warped = get_warped(img)
     if warped is None:
         return None # no board found
@@ -74,5 +74,5 @@ def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
         else:
             color = 'w'
         board.append(Stone(cy, cx, color))
-    return board
+    return board, board_size
 

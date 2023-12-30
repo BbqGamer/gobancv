@@ -31,8 +31,15 @@ def draw_board(stones: list[Stone], board_size: int = 19, show=True):
         assert color in [BLACK, WHITE]
         assert 1 <= x <= board_size
         assert 1 <= y <= board_size
+        
+        if board_size == 19:
+            marker_size = 30
+        elif board_size == 13:
+            marker_size = 40
+        else:
+            marker_size = 50
 
-        ax.plot(x-1, y-1, 'o', markersize=30, markeredgecolor=(
+        ax.plot(x-1, y-1, 'o', markersize=marker_size, markeredgecolor=(
             0, 0, 0), markerfacecolor=color, markeredgewidth=2)
 
     ax.invert_yaxis()

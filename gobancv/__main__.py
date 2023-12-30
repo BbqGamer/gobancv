@@ -77,10 +77,11 @@ while True:
         break
     
     if iter % args.frequency == 0: # update board every n frames
-        stones = detect_go_game(frame, debug=args.debug)
-        if stones is not None:
+        res = detect_go_game(frame, debug=args.debug)
+        if res is not None:
+            stones, board_size = res
             board = cv.resize(
-                board_to_numpy(stones, 19),
+                board_to_numpy(stones, board_size),
                 (height, height),
                 interpolation=cv.INTER_AREA
             )
