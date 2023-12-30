@@ -22,6 +22,12 @@ def detect_go_game(img) -> Optional[list[Stone]]:
 
         draw_lines(warped, h)
         draw_lines(warped, v)
+
+        board_size = len(h)
+        BOARD_SIZES = [9, 13, 19]
+        if len(h) != len(v) or board_size not in BOARD_SIZES:
+            return None # invalid go board
+
         intersections = get_intersections(h, v)
         if intersections is not None:
             lines = get_lines(warped)
