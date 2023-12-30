@@ -1,6 +1,5 @@
 import cv2 as cv
 import numpy as np
-from preprocessing import imshow
 
 def get_histograms(img, intersections, radius):
     colors = []

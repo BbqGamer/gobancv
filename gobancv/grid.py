@@ -63,14 +63,10 @@ def dedup(lines):
 
 def draw_intersections(img, intersections):
     for p in intersections:
-        cv.circle(img, (int(p[0]), int(p[1])), 5, (0, 255, 0), -1)
+        cv.circle(img, (int(p[0]), int(p[1])), 4, (0, 150, 0), -1)
 
 
-BOARD_SIZES = [9, 13, 19]
 def get_intersections(h, v):
-    if len(h) not in BOARD_SIZES or len(v) not in BOARD_SIZES:
-        return None
-
     intersections = []
     for hline in h:
         for vline in v:

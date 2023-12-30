@@ -2,6 +2,7 @@ import cv2 as cv
 import argparse
 import numpy as np
 from main import detect_go_game
+from utils import board_to_numpy
 
 
 parser = argparse.ArgumentParser(
@@ -28,8 +29,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--debug', action='store_true', required=False,
+    '--debug', action='store_true', default=False,
     help="Show intermediate steps"
+)
+
+parser.add_argument(
+    '--frequency', type=int, default=10,
+    help="Update board every n frames"
 )
 
 args = parser.parse_args()
@@ -61,7 +67,6 @@ if not cap.isOpened():
 
 iter = 0
 board = np.zeros((height, height, 3), dtype=np.uint8)
-warped = None
 
 while True:
     ret, frame = cap.read()
@@ -71,10 +76,14 @@ while True:
         print("Can't receive frame (stream end?). Exiting ...")
         break
     
-    if iter % 10 == 0:
-        new_board = detect_go_game(frame)
-        if new_board is not None:
-            board = new_board
+    if iter % args.frequency == 0: # update board every n frames
+        stones = detect_go_game(frame, debug=args.debug)
+        if stones is not None:
+            board = cv.resize(
+                board_to_numpy(stones, 19),
+                (height, height),
+                interpolation=cv.INTER_AREA
+            )
     
     new_frame = np.concatenate((frame, board), axis=1)
     cv.imshow('frame', new_frame)
