@@ -1,10 +1,7 @@
 import cv2 as cv
 import argparse
-from warp import get_warped
-from grid import get_intersections, get_lines, filter_lines, draw_lines, get_mean_dist
-from stones import get_histograms
-from utils import Stone, board_to_numpy
 import numpy as np
+from main import detect_go_game
 
 
 parser = argparse.ArgumentParser(
@@ -61,9 +58,11 @@ if args.output_file:
 if not cap.isOpened():
     print("Cannot open camera")
     exit(1)
+
 iter = 0
-board = None
+board = np.zeros((height, height, 3), dtype=np.uint8)
 warped = None
+
 while True:
     ret, frame = cap.read()
     iter += 1
@@ -73,51 +72,11 @@ while True:
         break
     
     if iter % 10 == 0:
-        warped = get_warped(frame)
-        if warped is not None:
-            lines = get_lines(warped)
-            h, v = filter_lines(lines, warped.shape[1])
-
-            draw_lines(warped, h)
-            draw_lines(warped, v)
-            intersections = get_intersections(h, v)
-            if intersections is not None:
-                lines = get_lines(warped)
-                # get params for neighborhood
-                h_mean = get_mean_dist(h)
-                v_mean = get_mean_dist(v)
-                radius = min(h_mean, v_mean) // 2
-                colors = get_histograms(warped, intersections, radius)
-
-                stones = []
-                for i, (x, y) in enumerate(sorted(intersections)):
-                    # cv.circle(warped, (int(x), int(y)), radius, colors[i], -1)
-                    b = i // 19 + 1
-                    a = i % 19 + 1
-                    if colors[i] == (0, 0, 0):
-                        stones.append(Stone(a, b, 'k'))
-                    elif colors[i] == (255, 255, 255):
-                        stones.append(Stone(a, b, 'w'))
-                
-                board = board_to_numpy(stones, 19)
-                board = cv.resize(board, warped.shape[:2], interpolation=cv.INTER_AREA)
-
-
-
-    if warped is None:
-        h = min(frame.shape[:2])
-        warped = np.zeros((h, h, 3), dtype=np.uint8)
-
-    if board is None:
-        board = np.zeros_like(warped)
+        new_board = detect_go_game(frame)
+        if new_board is not None:
+            board = new_board
     
-    if args.debug:
-        new_frame = np.concatenate((frame, warped, board), axis=1)
-    else:
-        new_frame = frame
-
-    if out:
-        out.write(new_frame)
+    new_frame = np.concatenate((frame, board), axis=1)
     cv.imshow('frame', new_frame)
 
     if cv.waitKey(delay) == ord('q'):
