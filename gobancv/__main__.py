@@ -1,7 +1,8 @@
 import cv2 as cv
 import argparse
 from warp import get_warped
-from grid import get_intersections, draw_intersections, get_lines, filter_lines, draw_lines
+from grid import get_intersections, get_lines, filter_lines, draw_lines, get_mean_dist
+from stones import get_histograms
 import numpy as np
 
 
@@ -76,7 +77,15 @@ while True:
         intersections = get_intersections(h, v)
         if intersections is not None:
             lines = get_lines(warped)
-            draw_intersections(warped, intersections)
+            # get params for neighborhood
+            h_mean = get_mean_dist(h)
+            v_mean = get_mean_dist(v)
+            radius = min(h_mean, v_mean) // 2
+            colors = get_histograms(warped, intersections, radius)
+
+            for i, (x, y) in enumerate(intersections):
+                cv.circle(warped, (int(x), int(y)), radius, colors[i], -1)
+
 
     if warped is None:
         h = min(frame.shape[:2])

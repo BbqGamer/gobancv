@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from itertools import pairwise
 
 def get_lines(warped):
     gray = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
@@ -83,4 +84,14 @@ def get_intersections(h, v):
             x0, y0 = np.linalg.solve(A, b)
             intersections.append((x0, y0))
     return intersections
+
+
+
+
+def get_mean_dist(lines):
+    def mean_diff(pairs):
+        return np.mean([abs(a - b) for a, b in pairs])
+    mean = mean_diff(pairwise([hline[0][0] for hline in lines]))
+    return int(mean)
+
 
