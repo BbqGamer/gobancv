@@ -36,8 +36,8 @@ def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
     radius = min(h_mean, v_mean) // 2
     
     minRadius = int(radius * 3 / 4)
-    maxRadius = int(radius * 5 / 4)
-    circles = find_circles(warped, minRadius, maxRadius)
+    maxRadius = int(radius * 4 / 3)
+    circles = find_circles(warped, minRadius, maxRadius, True)
 
     if debug:
         debug_img = warped.copy()
@@ -45,7 +45,7 @@ def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
         draw_lines(debug_img, v)
         draw_intersections(debug_img, intersections)
         draw_circles(debug_img, circles)
-        cv.imshow('DEBUG', debug_img)
+        cv.imshow('DEBUG main', debug_img)
 
 
     colors = get_histograms(warped, intersections, radius)

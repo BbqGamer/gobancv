@@ -15,11 +15,16 @@ def get_histograms(img, intersections, radius):
     return colors
 
 
-def find_circles(img, minRadius, maxRadius):
+def find_circles(img, minRadius, maxRadius, debug=False):
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     blur = cv.medianBlur(gray, 5)
+    _, shadow_mask = cv.threshold(blur, 40, 255, cv.THRESH_BINARY)
+    no_shadows = cv.bitwise_and(blur, blur, mask=shadow_mask) 
+
+    if debug:
+        cv.imshow('find_circles DEBUG', no_shadows)
     circles = cv.HoughCircles(
-        blur,
+        no_shadows,
         cv.HOUGH_GRADIENT,
         dp=1,
         minDist=10,
