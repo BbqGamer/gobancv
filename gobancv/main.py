@@ -51,8 +51,28 @@ def detect_go_game(img, debug=False) -> Optional[list[Stone]]:
     stones = []
     intersections = sorted(intersections) 
     for circle in circles[0]:
-        cy, cx = closest_intersection(circle, intersections, board_size)
-        stones.append(Stone(cy, cx, 'k'))
+        closest = closest_intersection(circle, intersections, board_size)
+        if closest is not None:
+            stones.append((circle, closest))
 
-    return stones
+    # cluster stone colors
+    colors = []
+    for (circle, _) in stones:
+        x, y, _ = circle
+        x = int(x)
+        y = int(y)
+        roi = warped[y - radius:y + radius, x - radius:x + radius]
+        mean = cv.mean(roi)
+        colors.append(mean[:3])
+
+    kmeans = KMeans(n_clusters=2, random_state=0).fit(colors)
+    board = []
+    black = 0 if np.mean(kmeans.cluster_centers_[0]) < np.mean(kmeans.cluster_centers_[1]) else 1
+    for (_, (cy, cx)), label in zip(stones, kmeans.labels_):
+        if label == black:
+            color = 'k'
+        else:
+            color = 'w'
+        board.append(Stone(cy, cx, color))
+    return board
 
