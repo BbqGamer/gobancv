@@ -77,7 +77,7 @@ while True:
         break
     
     if iter % args.frequency == 0: # update board every n frames
-        res = detect_go_game(frame, debug=args.debug)
+        res = detect_go_game(frame, args.debug)
         if res is not None:
             stones, board_size = res
             board = cv.resize(
@@ -85,6 +85,7 @@ while True:
                 (height, height),
                 interpolation=cv.INTER_AREA
             )
+            board = cv.cvtColor(board, cv.COLOR_RGB2BGR)
     
     new_frame = np.concatenate((frame, board), axis=1)
     cv.imshow('frame', new_frame)

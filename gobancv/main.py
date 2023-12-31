@@ -67,12 +67,11 @@ def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
 
     kmeans = KMeans(n_clusters=2, random_state=0).fit(colors)
     board = []
-    black = 0 if np.mean(kmeans.cluster_centers_[0]) < np.mean(kmeans.cluster_centers_[1]) else 1
+    c1 = np.sum(kmeans.cluster_centers_[0][0])
+    c2 = np.sum(kmeans.cluster_centers_[1][0])
+    black = 0 if c1 < c2 else 1
     for (_, (cy, cx)), label in zip(stones, kmeans.labels_):
-        if label == black:
-            color = 'k'
-        else:
-            color = 'w'
+        color = 'k' if label == black else 'w'
         board.append(Stone(cy, cx, color))
     return board, board_size
 
