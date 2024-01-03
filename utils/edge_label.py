@@ -28,22 +28,15 @@ def get_four_points(image_path):
             return None
         # press enter to confirm
         if key == 13:
-            if len(points) != 4:
-                print("Please select four points.")
-            else:
-                cv2.destroyAllWindows()
-                return points
+            cv2.destroyAllWindows()
+            return points
 
-def save_labels(image_path, points, output_file):
-    if points is None:
-        return
-
-    image_name = os.path.basename(image_path)
-    with open(output_file, 'w', newline='') as csvfile:
-        csv_writer = csv.writer(csvfile)
-        csv_writer.writerow(
-            [image_name] + [str(coord) for point in points for coord in point]
-        )
+def save_labels(labels, output_file):
+    with open(output_file, 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["image_path", "x1", "y1", "x2", "y2", "x3", "y3", "x4", "y4"])
+        for image_path, points in labels:
+            writer.writerow([image_path] + [p for point in points for p in point])
 
 def main():
     parser = argparse.ArgumentParser()
@@ -57,24 +50,18 @@ def main():
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.output_file):
-        with open(args.output_file, 'w', newline='') as csvfile:
-            csv_writer = csv.writer(csvfile)
-            csv_writer.writerow(
-                ["Image_Name", "X1", "Y1", "X2", "Y2", "X3", "Y3", "X4", "Y4"]
-            )
-
     image_files = [
         f for f in os.listdir(args.images_folder)
         if f.endswith(('.jpg', '.jpeg', '.png'))
     ]
 
+    labels = []
     for image_file in image_files:
         image_path = os.path.join(args.images_folder, image_file)
         points = get_four_points(image_path)
+        labels.append((image_path, points))
 
-        if points is not None:
-            save_labels(image_path, points, args.output_file)
+    save_labels(labels, args.output_file)
 
 if __name__ == "__main__":
     main()
