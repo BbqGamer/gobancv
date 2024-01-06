@@ -2,7 +2,8 @@ import cv2 as cv
 import argparse
 import numpy as np
 from main import detect_go_game
-from utils import board_to_numpy
+from state.drawing import board_to_numpy
+from state.board import similarity
 
 
 parser = argparse.ArgumentParser(
@@ -29,7 +30,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--debug', action='store_true', default=False,
+    '--debug', type=int, default=0,
     help="Show intermediate steps"
 )
 
@@ -67,6 +68,7 @@ if not cap.isOpened():
 
 iter = 0
 board = np.zeros((height, height, 3), dtype=np.uint8)
+stones = None
 
 while True:
     ret, frame = cap.read()
@@ -75,20 +77,25 @@ while True:
     if not ret:
         print("Can't receive frame (stream end?). Exiting ...")
         break
-    
-    if iter % args.frequency == 0: # update board every n frames
+
+    if iter % args.frequency == 0:  # update board every n frames
         res = detect_go_game(frame, args.debug)
         if res is not None:
-            stones, board_size = res
+            new_stones, board_size = res
+            if stones is not None:
+                print(similarity(stones, new_stones))
+            stones = new_stones
             board = cv.resize(
                 board_to_numpy(stones, board_size),
                 (height, height),
                 interpolation=cv.INTER_AREA
             )
-            board = cv.cvtColor(board, cv.COLOR_RGB2BGR)
-    
+            new_board = cv.cvtColor(board, cv.COLOR_RGB2BGR)
+
     new_frame = np.concatenate((frame, board), axis=1)
     cv.imshow('frame', new_frame)
+    if out:
+        out.write(frame)
 
     if cv.waitKey(delay) == ord('q'):
         break

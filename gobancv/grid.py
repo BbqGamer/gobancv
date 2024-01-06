@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 from itertools import pairwise
 
+
 def get_lines(warped):
     gray = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
     thresholded = cv.adaptiveThreshold(
@@ -11,6 +12,7 @@ def get_lines(warped):
     edges = cv.Canny(eroded, 50, 150, apertureSize=3)
     lines = cv.HoughLines(edges, 1, np.pi / 180, 150)
     return lines
+
 
 def draw_lines(img, lines):
     if lines is None:
@@ -25,7 +27,7 @@ def draw_lines(img, lines):
         y1 = int(y0 + 1000 * (a))
         x2 = int(x0 - 1000 * (-b))
         y2 = int(y0 - 1000 * (a))
-        cv.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv.line(img, (x1, y1), (x2, y2), 255, 2)
 
 
 def filter_lines(lines, width):
@@ -40,9 +42,10 @@ def filter_lines(lines, width):
         if abs(theta) < np.pi / 8 or abs(theta) > 7 * np.pi / 8:
             vertical.append(line)
         elif abs(theta - np.pi / 2) < np.pi / 8 or \
-             abs(theta - np.pi / 2) > 7 * np.pi / 8:
+                abs(theta - np.pi / 2) > 7 * np.pi / 8:
             horizontal.append(line)
     return dedup(horizontal), dedup(vertical)
+
 
 def dedup(lines):
     # remove lines that are too close to each other
@@ -56,7 +59,7 @@ def dedup(lines):
             prev_rho, _ = lines[i - 1][0]
             if abs(rho - prev_rho) > 10:
                 deduped.append(lines[i])
-            else :
+            else:
                 deduped[-1] = (lines[i] + deduped[-1]) / 2
     return deduped
 
@@ -82,12 +85,8 @@ def get_intersections(h, v):
     return intersections
 
 
-
-
 def get_mean_dist(lines):
     def mean_diff(pairs):
         return np.mean([abs(a - b) for a, b in pairs])
     mean = mean_diff(pairwise([hline[0][0] for hline in lines]))
     return int(mean)
-
-

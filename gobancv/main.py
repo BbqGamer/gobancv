@@ -1,4 +1,4 @@
-from utils import Stone
+from state import Stone
 from typing import Optional
 from warp import get_warped
 import cv2 as cv
@@ -12,21 +12,23 @@ from grid import (
     draw_intersections
 )
 from stones import find_circles, draw_circles, closest_intersection
-from utils import Stone
 from sklearn.cluster import KMeans
 
+
 def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
-    warped = get_warped(img)
+    warped = get_warped(img, debug)
     if warped is None:
-        return None # no board found
+        return None  # no board found
 
     lines = get_lines(warped)
+    if lines is None:
+        return None
     h, v = filter_lines(lines, warped.shape[1])
 
     board_size = len(h)
     BOARD_SIZES = [9, 13, 19]
     if len(h) != len(v) or board_size not in BOARD_SIZES:
-        return None # invalid go board
+        return None  # invalid go board
 
     intersections = get_intersections(h, v)
 
@@ -34,7 +36,7 @@ def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
     h_mean = get_mean_dist(h)
     v_mean = get_mean_dist(v)
     radius = min(h_mean, v_mean) // 2
-    
+
     minRadius = int(radius * 3 / 4)
     maxRadius = int(radius * 4 / 3)
     circles = find_circles(warped, minRadius, maxRadius, debug)
@@ -48,8 +50,10 @@ def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
         cv.imshow('DEBUG main', debug_img)
 
     # find closest intersection
+    if circles is None:
+        return [], board_size
     stones = []
-    intersections = sorted(intersections) 
+    intersections = sorted(intersections)
     for circle in circles[0]:
         closest = closest_intersection(circle, intersections, board_size)
         if closest is not None:
@@ -74,4 +78,3 @@ def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
         color = 'k' if label == black else 'w'
         board.append(Stone(cy, cx, color))
     return board, board_size
-
