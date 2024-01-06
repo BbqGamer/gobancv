@@ -5,7 +5,11 @@ from sklearn.cluster import KMeans
 CV_8U = cv.CV_8U  # type: ignore
 
 
-def draw_lines_polar(img, lines, color=255):
+def draw_lines(img, lines, color=255):
+    """Takes pointer to image and list of lines to draw
+       Lines are in (rho, theta) format
+       Optionally takes color
+    """
     h = img.shape[0]
     w = img.shape[1]
     if lines is None:
@@ -23,7 +27,11 @@ def draw_lines_polar(img, lines, color=255):
         cv.line(img, (x1, y1), (x2, y2), color, 2)  # type: ignore
 
 
-def draw_lines(img, lines, color=255):
+def draw_segments(img, lines, color=255):
+    """Takes pointer to image and list of segments to draw
+       Lines are in (x1, y1, x2, y2) format
+       Optionally takes color
+    """
     if lines is None:
         return img
     imgc = img.copy()
@@ -34,6 +42,9 @@ def draw_lines(img, lines, color=255):
 
 
 def line_filter(gray):
+    """Detect edges in an image using Sobel filters thresholding 
+       and morphological operations
+    """
     def line_filter_aux(gray, kernel):
         down = cv.filter2D(gray, CV_8U, kernel)
         up = cv.filter2D(gray, CV_8U, np.flip(kernel))
@@ -58,7 +69,7 @@ def line_filter(gray):
 
 
 def cluster_by_directions(lines):
-    """Cluster lines by direction using KMeans and return two lists"""
+    """Cluster lines by angle using KMeans and return two lists"""
     # We take abs of sin bacause we want e.g. 1 degree and 179 degree to be close
     thetas = np.abs(np.sin(lines[:, 0, 1])).reshape(-1, 1)
     if len(thetas) < 2:

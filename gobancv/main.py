@@ -9,7 +9,7 @@ from grid import (
     get_mean_dist,
     draw_intersections
 )
-from lines import draw_lines_polar
+from lines import draw_lines
 from points import get_intersections
 from stones import find_circles, draw_circles, closest_intersection
 from sklearn.cluster import KMeans
@@ -43,8 +43,8 @@ def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
 
     if debug:
         debug_img = warped.copy()
-        draw_lines_polar(debug_img, h)
-        draw_lines_polar(debug_img, v)
+        draw_lines(debug_img, h)
+        draw_lines(debug_img, v)
         draw_intersections(debug_img, intersections)
         draw_circles(debug_img, circles)
         cv.imshow('DEBUG main', debug_img)

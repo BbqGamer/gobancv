@@ -3,6 +3,10 @@ import numpy as np
 
 
 def get_intersections(h, v):
+    """Takes two lists of lines (e.g. horizontal and vertical) 
+       Returns list of intersection points (x,y) between lines (rho, theta)
+       Only computes intersections of lines from other groups
+    """
     intersections = []
     for hline in h:
         for vline in v:
@@ -19,6 +23,7 @@ def get_intersections(h, v):
 
 
 def inside_image(p, shape):
+    """Check if point p is inside image of some shape"""
     return 0 <= p[0] < shape[1] and 0 <= p[1] < shape[0]
 
 
@@ -34,6 +39,7 @@ def cluster_intersections(intersections):
 
 
 def sort_points_clockwise(points):
+    """Sort points in clockwise order around their mean"""
     def get_angle(point):
         x, y = point[0] - reference_point[0], point[1] - reference_point[1]
         return np.arctan2(y, x)
