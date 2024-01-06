@@ -4,18 +4,18 @@ from warp import get_warped
 import cv2 as cv
 import numpy as np
 from grid import (
-    get_intersections,
     get_lines,
     filter_lines,
-    draw_lines,
     get_mean_dist,
     draw_intersections
 )
+from lines import draw_lines_polar
+from points import get_intersections
 from stones import find_circles, draw_circles, closest_intersection
 from sklearn.cluster import KMeans
 
 
-def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
+def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
     warped = get_warped(img, debug)
     if warped is None:
         return None  # no board found
@@ -39,12 +39,12 @@ def detect_go_game(img, debug=False) -> Optional[tuple[list[Stone], int]]:
 
     minRadius = int(radius * 3 / 4)
     maxRadius = int(radius * 4 / 3)
-    circles = find_circles(warped, minRadius, maxRadius, debug)
+    circles = find_circles(warped, minRadius, maxRadius)
 
     if debug:
         debug_img = warped.copy()
-        draw_lines(debug_img, h)
-        draw_lines(debug_img, v)
+        draw_lines_polar(debug_img, h)
+        draw_lines_polar(debug_img, v)
         draw_intersections(debug_img, intersections)
         draw_circles(debug_img, circles)
         cv.imshow('DEBUG main', debug_img)

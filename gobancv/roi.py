@@ -9,7 +9,8 @@ def find_roi(img, debug):
     sobelx = cv.Sobel(gray, CV_8U, 1, 0).astype('float32')
     sobely = cv.Sobel(gray, CV_8U, 0, 1).astype('float32')
     mag_sob, _ = cv.cartToPolar(sobelx, sobely)
-    normalized = cv.normalize(mag_sob, None, 0, 255, cv.NORM_MINMAX, CV_8U)
+    normalized = cv.normalize(
+        mag_sob, None, 0, 255, cv.NORM_MINMAX, CV_8U)  # type: ignore
     th = cv.threshold(normalized, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU)[1]
     dilated = cv.dilate(th, np.ones((3, 3), np.uint8), iterations=2)
     contours, _ = cv.findContours(
@@ -18,7 +19,7 @@ def find_roi(img, debug):
     hull = cv.convexHull(biggest)
     bbox = cv.boundingRect(hull)
     mask = np.zeros_like(gray)
-    cv.rectangle(mask, bbox, 255, -1)
+    cv.rectangle(mask, bbox, 255, -1)  # type: ignore
     if debug:
         row1 = np.concatenate([sobelx, sobely, normalized], axis=1)
         row2 = np.concatenate([th, dilated, mask], axis=1)

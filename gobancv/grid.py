@@ -14,22 +14,6 @@ def get_lines(warped):
     return lines
 
 
-def draw_lines(img, lines):
-    if lines is None:
-        return img
-    for line in lines:
-        rho, theta = line[0]
-        a = np.cos(theta)
-        b = np.sin(theta)
-        x0 = a * rho
-        y0 = b * rho
-        x1 = int(x0 + 1000 * (-b))
-        y1 = int(y0 + 1000 * (a))
-        x2 = int(x0 - 1000 * (-b))
-        y2 = int(y0 - 1000 * (a))
-        cv.line(img, (x1, y1), (x2, y2), 255, 2)
-
-
 def filter_lines(lines, width):
     # get horizontal and vertical lines
     horizontal = []
@@ -67,22 +51,6 @@ def dedup(lines):
 def draw_intersections(img, intersections):
     for p in intersections:
         cv.circle(img, (int(p[0]), int(p[1])), 4, (0, 150, 0), -1)
-
-
-def get_intersections(h, v):
-    intersections = []
-    for hline in h:
-        for vline in v:
-            h_rho, h_theta = hline[0]
-            v_rho, v_theta = vline[0]
-            A = np.array([
-                [np.cos(h_theta), np.sin(h_theta)],
-                [np.cos(v_theta), np.sin(v_theta)]
-            ])
-            b = np.array([[h_rho], [v_rho]])
-            x0, y0 = np.linalg.solve(A, b)
-            intersections.append((x0[0], y0[0]))
-    return intersections
 
 
 def get_mean_dist(lines):
