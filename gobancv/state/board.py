@@ -47,7 +47,7 @@ def flip_board(stones: list[Stone], board_size: int):
     return new_stones
 
 
-def most_similiar_board(stones: list[Stone], target_stones: list[Stone], board_size: int, threshold: float):
+def most_similiar_board(stones: list[Stone], target_stones: list[Stone], board_size: int, threshold):
     best_similarity = similarity(stones, target_stones)
     best_stones = stones
     for _ in range(3):
@@ -55,10 +55,10 @@ def most_similiar_board(stones: list[Stone], target_stones: list[Stone], board_s
         if similarity(stones, target_stones) > best_similarity:
             best_similarity = similarity(stones, target_stones)
             best_stones = stones
-    print(best_similarity, "/", threshold)
-    if best_similarity >= threshold:
-        return best_stones
-    else:
-        print(
-            f"Board is not similar enough to previous board (similarity: {best_similarity})")
-        return None
+    return best_stones if best_similarity > threshold else None
+
+
+def diff_stones(prev: list[Stone], current: list[Stone]):
+    added = [s for s in current if s not in prev]
+    removed = [s for s in prev if s not in current]
+    return added, removed

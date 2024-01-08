@@ -31,7 +31,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--debug', type=int, default=0,
+    '--debug', type=str, default='',
     help="Show intermediate steps"
 )
 
@@ -72,6 +72,7 @@ board = np.zeros((height, height, 3), dtype=np.uint8)
 prev_stones = None
 prev_warped = None
 prev_board_size = None
+board_size_patience = 2
 board_diff_threshold = 0.8
 
 while True:
@@ -92,9 +93,10 @@ while True:
             diff = cv.absdiff(warpedblur, prev_warpedblur)
             diff = np.where(diff > 10, diff, 0)
             diffsum = np.sum(diff)
-            cv.imshow('diff', diff)
+            if args.debug == 'diff':
+                cv.imshow('diff', diff)
 
-            if diffsum > warped.shape[0] * warped.shape[1] * 3 * 10:
+            if diffsum > warped.shape[0] * warped.shape[1] * 3 * 20:
                 prev_warped = warped.copy()
                 print("Skipping frame because of too much difference")
                 continue
@@ -103,14 +105,16 @@ while True:
         res = detect_go_game(warped, args.debug)
         if res is not None:
             new_stones, board_size = res
-            if prev_board_size is not None and prev_board_size != board_size:
+            if prev_board_size is not None and prev_board_size != board_size and board_size_patience > 0:
+                board_size_patience -= 1
                 continue
+            board_size_patience = 2
             prev_board_size = board_size
             if prev_stones is not None:
                 new_stones = most_similiar_board(
                     new_stones, prev_stones, board_size, threshold=board_diff_threshold)
             if new_stones is None:
-                board_diff_threshold -= 0.1
+                board_diff_threshold -= 0.2
                 continue
             else:
                 board_diff_threshold = 0.8

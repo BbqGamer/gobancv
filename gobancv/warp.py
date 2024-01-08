@@ -5,7 +5,7 @@ from points import cluster_intersections, sort_points_clockwise, get_intersectio
 import itertools
 
 
-def find_board(img, debug=0):
+def find_board(img, debug):
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
     OR = line_filter(gray)
@@ -33,7 +33,7 @@ def find_board(img, debug=0):
 
     intersections = get_intersections(a, b)
     corner_candidates = list(cluster_intersections(intersections))
-    if debug >= 2:
+    if debug == 'find':
         clustered = np.zeros_like(gray)
         draw_lines(border, lines)
         draw_lines(clustered, a)
@@ -48,7 +48,7 @@ def find_board(img, debug=0):
             print("Could not find exactly 4 corners")
         return None
     else:
-        if debug:
+        if debug == 'warp':
             with_corners = img.copy()
             for p in corner_candidates:
                 coord = tuple(map(int, p))
@@ -80,6 +80,6 @@ def get_warped(img, debug=0):
     M = cv.getPerspectiveTransform(src_points, dest_points)
 
     warped = cv.warpPerspective(img, M, (w, w))
-    if debug:
+    if debug == 'warp':
         cv.imshow('warped', warped)
     return warped

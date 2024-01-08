@@ -169,3 +169,39 @@ def process_lines(lines, img_shape):
     vertical = extrapolate_lines_to_rho(vertical, img_shape[0])
 
     return horizontal, vertical
+
+
+def extrapolate_lines_to_board_size(lines, board_size, max_rho):
+    """Extrapolates lines to given rho range using median rho difference"""
+    s_lines = np.sort(lines, axis=0)
+    approx_diff = max_rho / (board_size - 1)
+
+    median_theta = np.median(s_lines[:, :, 1], axis=0).item()
+
+    first = s_lines[0, :, :]
+
+    # go left
+    current_rho = first[0][0].copy()
+
+    extrapolated = []
+
+    ERROR = 5
+    num_lines = 0
+    while current_rho > 0 - ERROR:
+        new_line = np.array([[current_rho, median_theta]])
+        # find closest line in s_lines
+        closest = closest_line(new_line, s_lines)
+        extrapolated.append(closest)
+        num_lines += 1
+        current_rho -= approx_diff
+
+    # go right
+    current_rho = first[0][0].copy() + approx_diff
+    while num_lines < board_size:
+        new_line = np.array([[current_rho, median_theta]])
+        closest = closest_line(new_line, s_lines)
+        extrapolated.append(closest)
+        num_lines += 1
+        current_rho += approx_diff
+
+    return np.array(extrapolated)

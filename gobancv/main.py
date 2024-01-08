@@ -5,16 +5,15 @@ import numpy as np
 from grid import (
     draw_intersections
 )
-from lines import draw_lines, line_filter, process_lines
+from lines import draw_lines, line_filter, process_lines, extrapolate_lines_to_board_size
 from points import get_intersections
 from stones import draw_circles, closest_intersection
 from sklearn.cluster import KMeans
 
 
-def detect_go_game(warped, debug=0) -> Optional[tuple[list[Stone], int]]:
+def detect_go_game(warped, debug) -> Optional[tuple[list[Stone], int]]:
     gray_warped = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
 
-    cv.imshow('blured', gray_warped)
     OR = line_filter(gray_warped)
     lines = cv.HoughLines(OR, 1, np.pi / 180, 220)
     if lines is None:
@@ -30,6 +29,10 @@ def detect_go_game(warped, debug=0) -> Optional[tuple[list[Stone], int]]:
     board_size = min(
         LEGAL_BOARD_SIZES, key=lambda x: abs(x - approx_board_size))
 
+    horizontal = extrapolate_lines_to_board_size(
+        horizontal, board_size, OR.shape[1])
+    vertical = extrapolate_lines_to_board_size(
+        vertical, board_size, OR.shape[0])
     intersections = get_intersections(horizontal, vertical, board_size)
 
     # get params for neighborhood
@@ -45,12 +48,12 @@ def detect_go_game(warped, debug=0) -> Optional[tuple[list[Stone], int]]:
         dp=1,
         minDist=expectedRad,
         param1=100,  # upper threshold for Canny edge detector
-        param2=15,
+        param2=20,
         minRadius=minRad,
         maxRadius=maxRad
     )
 
-    if debug:
+    if debug == 'lines':
         debug_img = warped.copy()
         draw_lines(debug_img, horizontal)
         draw_lines(debug_img, vertical)
@@ -115,7 +118,7 @@ def detect_go_game(warped, debug=0) -> Optional[tuple[list[Stone], int]]:
         distances_to_centers = [np.linalg.norm(color - c)
                                 for c in kmeans.cluster_centers_]
         closest = np.argmin(distances_to_centers)
-        if distances_to_centers[closest] < 40:
+        if distances_to_centers[closest] < 30:
             color = 'k' if closest == black else 'w'
             board.append(Stone(cy, cx, color))
 
