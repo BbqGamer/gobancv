@@ -27,13 +27,14 @@ def find_board(img, debug=0):
 
     border = np.zeros_like(gray)
     lines = cv.HoughLines(noisy_board, 1, np.pi/180, 200)
-
-    clustered = np.zeros_like(gray)
+    if lines is None:
+        return None
     a, b = cluster_by_directions(lines)
 
     intersections = get_intersections(a, b)
     corner_candidates = list(cluster_intersections(intersections))
     if debug >= 2:
+        clustered = np.zeros_like(gray)
         draw_lines(border, lines)
         draw_lines(clustered, a)
         draw_lines(clustered, b, color=50)

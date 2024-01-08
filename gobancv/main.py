@@ -1,28 +1,18 @@
 from state import Stone
 from typing import Optional
-from warp import get_warped
 import cv2 as cv
 import numpy as np
 from grid import (
-    get_lines,
-    filter_lines,
-    get_mean_dist,
     draw_intersections
 )
 from lines import draw_lines, line_filter, process_lines
 from points import get_intersections
-from stones import find_circles, draw_circles, closest_intersection
+from stones import draw_circles, closest_intersection
 from sklearn.cluster import KMeans
 
 
-def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
-    # find board and warp image to square
-    warped = get_warped(img, debug)
-    if warped is None:
-        return None  # no board found
-
+def detect_go_game(warped, debug=0) -> Optional[tuple[list[Stone], int]]:
     gray_warped = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
-    # blured = cv.medianBlur(gray_warped, 11)
 
     cv.imshow('blured', gray_warped)
     OR = line_filter(gray_warped)
@@ -118,14 +108,14 @@ def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
         board.append(Stone(cy, cx, color))
 
     for intersection in no_circles:
-        (x, y), (cx, cy) = intersection
+        (x, y), (cy, cx) = intersection
         mask = np.zeros(warped.shape[:2], dtype=np.uint8)
         cv.circle(mask, (int(x), int(y)), minRad, 255, thickness=cv.FILLED)
         color = cv.mean(warped, mask=mask)[:3]
         distances_to_centers = [np.linalg.norm(color - c)
                                 for c in kmeans.cluster_centers_]
         closest = np.argmin(distances_to_centers)
-        if distances_to_centers[closest] < 50:
+        if distances_to_centers[closest] < 40:
             color = 'k' if closest == black else 'w'
             board.append(Stone(cy, cx, color))
 

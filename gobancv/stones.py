@@ -33,16 +33,6 @@ def find_circles(img, minRadius, maxRadius, debug=False):
         minRadius=minRadius,
         maxRadius=maxRadius
     )
-    circles = cv.HoughCircles(
-        blured,
-        cv.HOUGH_GRADIENT,
-        dp=1,
-        minDist=expectedRad,
-        param1=100,  # upper threshold for Canny edge detector
-        param2=15,
-        minRadius=minRad,
-        maxRadius=maxRad
-    )
     return circles
 
 

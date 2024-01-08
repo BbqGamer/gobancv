@@ -10,7 +10,7 @@ def similarity(b_1: list[Stone], b_2: list[Stone]):
     denominator = len(s_1 | s_2)
     if denominator == 0:
         return 0
-    return numerator / denominator 
+    return numerator / denominator
 
 
 def read_stones(content: str) -> list[Stone]:
@@ -36,3 +36,29 @@ def read_stones(content: str) -> list[Stone]:
                 stones.append(Stone(int(x), int(y), color))
 
     return stones
+
+
+def flip_board(stones: list[Stone], board_size: int):
+    """Flip board by 90 degrees"""
+    new_stones = []
+    for stone in stones:
+        new_stones.append(
+            Stone(board_size - stone.x + 1, stone.y, stone.color))
+    return new_stones
+
+
+def most_similiar_board(stones: list[Stone], target_stones: list[Stone], board_size: int, threshold: float):
+    best_similarity = similarity(stones, target_stones)
+    best_stones = stones
+    for _ in range(3):
+        stones = flip_board(stones, board_size)
+        if similarity(stones, target_stones) > best_similarity:
+            best_similarity = similarity(stones, target_stones)
+            best_stones = stones
+    print(best_similarity, "/", threshold)
+    if best_similarity >= threshold:
+        return best_stones
+    else:
+        print(
+            f"Board is not similar enough to previous board (similarity: {best_similarity})")
+        return None
