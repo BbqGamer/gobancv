@@ -101,7 +101,8 @@ def detect_go_game(warped, debug) -> Optional[tuple[list[Stone], int]]:
         ypos = int(stones[0][1][1])
         return [Stone(ypos, xpos, 'k')], board_size
 
-    kmeans = KMeans(n_clusters=2, random_state=0).fit(circle_colors)
+    kmeans = KMeans(n_clusters=2, random_state=0,
+                    n_init='auto').fit(circle_colors)
     board = []
     c1 = np.sum(kmeans.cluster_centers_[0][0])
     c2 = np.sum(kmeans.cluster_centers_[1][0])

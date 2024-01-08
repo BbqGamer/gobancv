@@ -45,7 +45,9 @@ def board_to_numpy(stones: list[Stone], board_size: int = 19):
     fig = draw_board(stones, board_size, show=False)
     fig.canvas.draw()
     data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    return data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    res = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    plt.close(fig)
+    return res
 
 
 EXAMPLE_BOARD = """2;12
