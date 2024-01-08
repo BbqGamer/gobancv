@@ -1,14 +1,16 @@
 import cv2 as cv
 import numpy as np
 
+
 def get_histograms(img, intersections, radius):
     colors = []
     for (x, y) in intersections:
         x = int(x[0])
         y = int(y[0])
-    
+
         mask = np.zeros(img.shape[:2], dtype=np.uint8)
-        cv.rectangle(mask, (x - radius, y - radius), (x + radius, y + radius), 255, thickness=cv.FILLED)
+        cv.rectangle(mask, (x - radius, y - radius),
+                     (x + radius, y + radius), 255, thickness=cv.FILLED)
         roi = cv.bitwise_and(img, img, mask=mask)
         mean = cv.mean(roi)
         colors.append(mean[:3])
@@ -19,17 +21,27 @@ def find_circles(img, minRadius, maxRadius, debug=False):
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     blur = cv.medianBlur(gray, 5)
     _, shadow_mask = cv.threshold(blur, 40, 255, cv.THRESH_BINARY)
-    no_shadows = cv.bitwise_and(blur, blur, mask=shadow_mask) 
+    no_shadows = cv.bitwise_and(blur, blur, mask=shadow_mask)
 
     circles = cv.HoughCircles(
         no_shadows,
         cv.HOUGH_GRADIENT,
         dp=1,
         minDist=10,
-        param1=200, # upper threshold for Canny edge detector
+        param1=200,  # upper threshold for Canny edge detector
         param2=15,
         minRadius=minRadius,
         maxRadius=maxRadius
+    )
+    circles = cv.HoughCircles(
+        blured,
+        cv.HOUGH_GRADIENT,
+        dp=1,
+        minDist=expectedRad,
+        param1=100,  # upper threshold for Canny edge detector
+        param2=15,
+        minRadius=minRad,
+        maxRadius=maxRad
     )
     return circles
 
@@ -43,9 +55,8 @@ def draw_circles(img, circles):
         cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
 
 
-def closest_intersection(circle, intersections, board_size):
+def closest_intersection(circle, intersections, board_size, min_dist=40):
     closest = None
-    min_dist = 40
     for i in range(len(intersections)):
         x, y = intersections[i]
         a = i // board_size + 1
@@ -55,4 +66,3 @@ def closest_intersection(circle, intersections, board_size):
             min_dist = dist
             closest = (a, b)
     return closest
-

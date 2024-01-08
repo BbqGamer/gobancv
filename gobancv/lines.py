@@ -73,7 +73,7 @@ def cluster_by_directions(lines):
     thetas = np.abs(np.sin(lines[:, 0, 1])).reshape(-1, 1)
     if len(thetas) < 2:
         return [], []
-    clustering = KMeans(n_clusters=2).fit(thetas)
+    clustering = KMeans(n_clusters=2, n_init='auto').fit(thetas)
     a = np.array([l for l, l_ in zip(lines, clustering.labels_) if l_ == 0])
     b = np.array([l for l, l_ in zip(lines, clustering.labels_) if l_ == 1])
     return a, b
@@ -107,7 +107,7 @@ def cluster_lines(lines, eps=10):
     return np.array(centers).reshape(-1, 1, 2)
 
 
-def closest_line(line, lines, eps=20):
+def closest_line(line, lines, eps=15):
     """Finds line that is closes to line in lines in terms of both rho and theta
        If the line is close enough to some other line in lines, returns line from lines
        otherwise return line given as argument
@@ -120,7 +120,7 @@ def closest_line(line, lines, eps=20):
     return lines[closest]
 
 
-def extrapolate_lines(lines, max_rho, min_rho=0):
+def extrapolate_lines_to_rho(lines, max_rho, min_rho=0):
     """Extrapolates lines to given rho range using median rho difference"""
     s_lines = np.sort(lines, axis=0)
     window_size = 2
@@ -145,11 +145,27 @@ def extrapolate_lines(lines, max_rho, min_rho=0):
         current_rho -= median_rho_diff
 
     # go right
-    current_rho = first[0][0].copy()
+    current_rho = first[0][0].copy() + median_rho_diff
     while current_rho < max_rho + ERROR:
-        current_rho += median_rho_diff
         new_line = np.array([[current_rho, median_theta]])
         closest = closest_line(new_line, s_lines)
         extrapolated.append(closest)
+        current_rho += median_rho_diff
 
     return np.array(extrapolated)
+
+
+def process_lines(lines, img_shape):
+    horizontal = filter_horizontal(lines)
+    if horizontal.shape[0] <= 1:
+        return None
+    horizontal = cluster_lines(horizontal)
+    horizontal = extrapolate_lines_to_rho(horizontal, img_shape[1])
+
+    vertical = filter_vertical(lines)
+    if vertical.shape[0] <= 1:
+        return None
+    vertical = cluster_lines(vertical)
+    vertical = extrapolate_lines_to_rho(vertical, img_shape[0])
+
+    return horizontal, vertical

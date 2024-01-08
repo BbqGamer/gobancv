@@ -9,10 +9,9 @@ from grid import (
     get_mean_dist,
     draw_intersections
 )
-from lines import draw_lines, line_filter
+from lines import draw_lines, line_filter, process_lines
 from points import get_intersections
 from stones import find_circles, draw_circles, closest_intersection
-from grid import approximate_board_size
 from sklearn.cluster import KMeans
 
 
@@ -27,35 +26,44 @@ def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
 
     cv.imshow('blured', gray_warped)
     OR = line_filter(gray_warped)
-    board_size = approximate_board_size(OR, debug)
-    print(board_size)
-
-    # old
-    lines = get_lines(warped)
+    lines = cv.HoughLines(OR, 1, np.pi / 180, 220)
     if lines is None:
         return None
-    h, v = filter_lines(lines, warped.shape[1])
 
-    board_size = len(h)
-    BOARD_SIZES = [9, 13, 19]
-    if len(h) != len(v) or board_size not in BOARD_SIZES:
-        return None  # invalid go board
+    res = process_lines(lines, OR.shape)
+    if res == None:
+        return None
+    horizontal, vertical = res
 
-    intersections = get_intersections(h, v)
+    LEGAL_BOARD_SIZES = [9, 13, 19]
+    approx_board_size = max(horizontal.shape[0], vertical.shape[0])
+    board_size = min(
+        LEGAL_BOARD_SIZES, key=lambda x: abs(x - approx_board_size))
+
+    intersections = get_intersections(horizontal, vertical, board_size)
 
     # get params for neighborhood
-    h_mean = get_mean_dist(h)
-    v_mean = get_mean_dist(v)
-    radius = min(h_mean, v_mean) // 2
 
-    minRadius = int(radius * 3 / 4)
-    maxRadius = int(radius * 4 / 3)
-    circles = find_circles(warped, minRadius, maxRadius)
+    expectedRad = gray_warped.shape[0] // (2 * board_size)
+    minRad = int(3 * expectedRad / 4)
+    maxRad = int(6 * expectedRad / 4)
+
+    blured = cv.medianBlur(gray_warped, 11)
+    circles = cv.HoughCircles(
+        blured,
+        cv.HOUGH_GRADIENT,
+        dp=1,
+        minDist=expectedRad,
+        param1=100,  # upper threshold for Canny edge detector
+        param2=15,
+        minRadius=minRad,
+        maxRadius=maxRad
+    )
 
     if debug:
         debug_img = warped.copy()
-        draw_lines(debug_img, h)
-        draw_lines(debug_img, v)
+        draw_lines(debug_img, horizontal)
+        draw_lines(debug_img, vertical)
         draw_intersections(debug_img, intersections)
         draw_circles(debug_img, circles)
         cv.imshow('DEBUG main', debug_img)
@@ -65,22 +73,42 @@ def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
         return [], board_size
     stones = []
     intersections = sorted(intersections)
+    print("SHAPE", len(intersections))
+    intersection_positions = [(i // board_size + 1, i % board_size + 1)
+                              for i in range(len(intersections))]
+    visited = set()
     for circle in circles[0]:
         closest = closest_intersection(circle, intersections, board_size)
         if closest is not None:
             stones.append((circle, closest))
+            visited.add(closest)
+    # add intersections that didn't have a circle
+    no_circles = []
+    for intersection, pos in zip(intersections, intersection_positions):
+        if pos not in visited:
+            no_circles.append((intersection, pos))
 
     # cluster stone colors
-    colors = []
+    circle_colors = []
     for (circle, _) in stones:
         x, y, _ = circle
         x = int(x)
         y = int(y)
-        roi = warped[y - radius:y + radius, x - radius:x + radius]
-        mean = cv.mean(roi)
-        colors.append(mean[:3])
+        mask = np.zeros(warped.shape[:2], dtype=np.uint8)
+        cv.circle(mask, (x, y), minRad, 255, thickness=cv.FILLED)
+        mean = cv.mean(warped, mask=mask)
+        circle_colors.append(mean[:3])
 
-    kmeans = KMeans(n_clusters=2, random_state=0).fit(colors)
+    if len(circle_colors) == 0:
+        return [], board_size
+
+    if len(circle_colors) == 1:
+        # there has been only one move made
+        xpos = int(stones[0][1][0])
+        ypos = int(stones[0][1][1])
+        return [Stone(ypos, xpos, 'k')], board_size
+
+    kmeans = KMeans(n_clusters=2, random_state=0).fit(circle_colors)
     board = []
     c1 = np.sum(kmeans.cluster_centers_[0][0])
     c2 = np.sum(kmeans.cluster_centers_[1][0])
@@ -88,4 +116,17 @@ def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
     for (_, (cy, cx)), label in zip(stones, kmeans.labels_):
         color = 'k' if label == black else 'w'
         board.append(Stone(cy, cx, color))
+
+    for intersection in no_circles:
+        (x, y), (cx, cy) = intersection
+        mask = np.zeros(warped.shape[:2], dtype=np.uint8)
+        cv.circle(mask, (int(x), int(y)), minRad, 255, thickness=cv.FILLED)
+        color = cv.mean(warped, mask=mask)[:3]
+        distances_to_centers = [np.linalg.norm(color - c)
+                                for c in kmeans.cluster_centers_]
+        closest = np.argmin(distances_to_centers)
+        if distances_to_centers[closest] < 50:
+            color = 'k' if closest == black else 'w'
+            board.append(Stone(cy, cx, color))
+
     return board, board_size

@@ -2,13 +2,15 @@ from sklearn.cluster import DBSCAN
 import numpy as np
 
 
-def get_intersections(h, v):
+def get_intersections(h, v, board_size=19):
     """Takes two lists of lines (e.g. horizontal and vertical) 
        Returns list of intersection points (x,y) between lines (rho, theta)
        Only computes intersections of lines from other groups
     """
     intersections = []
+    hc = 0
     for hline in h:
+        vc = 0
         for vline in v:
             h_rho, h_theta = hline[0]
             v_rho, v_theta = vline[0]
@@ -19,6 +21,12 @@ def get_intersections(h, v):
             b = np.array([[h_rho], [v_rho]])
             x0, y0 = np.linalg.solve(A, b)
             intersections.append((x0[0], y0[0]))
+            vc += 1
+            if vc >= board_size:
+                break
+        hc += 1
+        if hc >= board_size:
+            break
     return intersections
 
 

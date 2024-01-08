@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 from lines import draw_lines, cluster_by_directions, line_filter, draw_segments
 from points import cluster_intersections, sort_points_clockwise, get_intersections
+import itertools
 
 
 def find_board(img, debug=0):
@@ -46,14 +47,24 @@ def find_board(img, debug=0):
             print("Could not find exactly 4 corners")
         return None
     else:
-        with_corners = img.copy()
-        for p in corner_candidates:
-            coord = tuple(map(int, p))
-            cv.drawMarker(with_corners,
-                          coord, 255, cv.MARKER_CROSS, 20, 2)  # type: ignore
         if debug:
+            with_corners = img.copy()
+            for p in corner_candidates:
+                coord = tuple(map(int, p))
+                cv.drawMarker(with_corners,
+                              coord, 255, cv.MARKER_CROSS, 20, 2)  # type: ignore
             cv.imshow('With corners', with_corners)
-        return np.array(sort_points_clockwise(corner_candidates))
+        sorted_points = sort_points_clockwise(corner_candidates)
+
+        # check if points make up a square
+        ERROR = 100
+        lengths = [np.linalg.norm(p1 - p2)
+                   for p1, p2 in itertools.pairwise(sorted_points)]
+        if not all(abs(l - lengths[0]) < ERROR for l in lengths):
+            if debug:
+                print("Points do not make up a square")
+            return None
+        return np.array(sorted_points)
 
 
 def get_warped(img, debug=0):
