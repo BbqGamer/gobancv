@@ -9,17 +9,28 @@ from grid import (
     get_mean_dist,
     draw_intersections
 )
-from lines import draw_lines
+from lines import draw_lines, line_filter
 from points import get_intersections
 from stones import find_circles, draw_circles, closest_intersection
+from grid import approximate_board_size
 from sklearn.cluster import KMeans
 
 
 def detect_go_game(img, debug=0) -> Optional[tuple[list[Stone], int]]:
+    # find board and warp image to square
     warped = get_warped(img, debug)
     if warped is None:
         return None  # no board found
 
+    gray_warped = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
+    # blured = cv.medianBlur(gray_warped, 11)
+
+    cv.imshow('blured', gray_warped)
+    OR = line_filter(gray_warped)
+    board_size = approximate_board_size(OR, debug)
+    print(board_size)
+
+    # old
     lines = get_lines(warped)
     if lines is None:
         return None

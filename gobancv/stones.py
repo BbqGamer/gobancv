@@ -21,8 +21,6 @@ def find_circles(img, minRadius, maxRadius, debug=False):
     _, shadow_mask = cv.threshold(blur, 40, 255, cv.THRESH_BINARY)
     no_shadows = cv.bitwise_and(blur, blur, mask=shadow_mask) 
 
-    if debug:
-        cv.imshow('find_circles DEBUG', no_shadows)
     circles = cv.HoughCircles(
         no_shadows,
         cv.HOUGH_GRADIENT,

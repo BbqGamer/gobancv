@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 from itertools import pairwise
+from lines import filter_horizontal, filter_vertical, draw_lines, cluster_lines, extrapolate_lines
 
 
 def get_lines(warped):
@@ -58,3 +59,39 @@ def get_mean_dist(lines):
         return np.mean([abs(a - b) for a, b in pairs])
     mean = mean_diff(pairwise([hline[0][0] for hline in lines]))
     return int(mean)
+
+
+def approximate_board_size(edges, debug=0):
+    lines = cv.HoughLines(edges, 1, np.pi / 180, 220)
+
+    if lines is None:
+        return None
+
+    horizontal = filter_horizontal(lines)
+    if horizontal.shape[0] <= 1:
+        return None
+    horizontal = cluster_lines(horizontal)
+    horizontal = extrapolate_lines(horizontal, edges.shape[1])
+
+    vertical = filter_vertical(lines)
+    if vertical.shape[0] <= 1:
+        return None
+    vertical = cluster_lines(vertical)
+    vertical = extrapolate_lines(vertical, edges.shape[0])
+
+    approx_board_size = max(horizontal.shape[0], vertical.shape[0])
+
+    # return legal board size that is closest to the approximated size
+    LEGAL_BOARD_SIZES = [9, 13, 19]
+    approx_board_size = min(
+        LEGAL_BOARD_SIZES, key=lambda x: abs(x - approx_board_size))
+    if debug >= 2:
+        with_horizontal = np.zeros_like(edges)
+        draw_lines(with_horizontal, horizontal)
+
+        with_vertical = np.zeros_like(edges)
+        draw_lines(with_vertical, vertical)
+        print("Approximate board size:", approx_board_size)
+        cv.imshow("debug aproximate board_size", np.concatenate(
+            [with_horizontal, with_vertical], axis=1))
+    return approx_board_size
