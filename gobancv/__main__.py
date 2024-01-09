@@ -124,7 +124,7 @@ while True:
                 (height, height),
                 interpolation=cv.INTER_AREA
             )
-            new_board = cv.cvtColor(board, cv.COLOR_RGB2BGR)
+            board = cv.cvtColor(board, cv.COLOR_RGB2BGR)
 
     prev_frame = frame.copy()
     new_frame = np.concatenate((frame, board), axis=1)

@@ -22,6 +22,13 @@ def find_board(img, debug):
         return None
     biggest = max(contours, key=lambda x: cv.contourArea(x))
 
+    epsilon = 0.03 * cv.arcLength(biggest, True)
+    approx = cv.approxPolyDP(biggest, epsilon, True)
+    print(len(approx), 'curves')
+    if len(approx) > 6:
+        print("Too many curves in contour")
+        return None
+
     noisy_board = np.zeros_like(gray)
     cv.drawContours(noisy_board, [biggest], -1, 255, 2)  # type: ignore
 
@@ -40,8 +47,9 @@ def find_board(img, debug):
         draw_lines(clustered, b, color=50)
         print(f"Found {len(intersections)} intersections")
         print(f"Found {len(corner_candidates)} corners")
-        cv.imshow('DEBUG find_board', np.concatenate(
-            [tmp, noisy_board, border, clustered], axis=1))
+        to_show = np.concatenate(
+            [tmp, noisy_board, border, clustered], axis=1)
+        cv.imshow('DEBUG find_board', to_show)
 
     if len(corner_candidates) != 4:
         if debug:
@@ -62,13 +70,13 @@ def find_board(img, debug):
         lengths = [np.linalg.norm(p1 - p2)
                    for p1, p2 in itertools.pairwise(sorted_points)]
         if not all(abs(l - lengths[0]) < ERROR for l in lengths):
-            if debug:
+            if debug == 'find':
                 print("Points do not make up a square")
             return None
         return np.array(sorted_points)
 
 
-def get_warped(img, debug=0):
+def get_warped(img, debug):
     board = find_board(img, debug)
     if board is None:
         return None

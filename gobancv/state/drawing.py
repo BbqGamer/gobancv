@@ -25,7 +25,7 @@ def draw_board(stones: list[Stone], board_size: int = 19, show=True):
         assert 1 <= y <= board_size
 
         if board_size == 19:
-            marker_size = 30
+            marker_size = 27
         elif board_size == 13:
             marker_size = 40
         else:

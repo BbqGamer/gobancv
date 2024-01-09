@@ -43,7 +43,7 @@ def flip_board(stones: list[Stone], board_size: int):
     new_stones = []
     for stone in stones:
         new_stones.append(
-            Stone(board_size - stone.x + 1, stone.y, stone.color))
+            Stone(y=board_size - stone.x + 1, x=stone.y, color=stone.color))
     return new_stones
 
 

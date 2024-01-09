@@ -66,7 +66,6 @@ def detect_go_game(warped, debug) -> Optional[tuple[list[Stone], int]]:
         return [], board_size
     stones = []
     intersections = sorted(intersections)
-    print("SHAPE", len(intersections))
     intersection_positions = [(i // board_size + 1, i % board_size + 1)
                               for i in range(len(intersections))]
     visited = set()
